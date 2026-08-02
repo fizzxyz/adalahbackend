@@ -66,7 +66,7 @@ async function registerExisting() {
         originalTmdbId = parseInt(seriesMatch[1], 10);
         season = parseInt(seriesMatch[2], 10);
         episode = parseInt(seriesMatch[3], 10);
-        mediaType = 'series';
+        mediaType = 'tv';
       } else {
         console.log(`--> Key tidak cocok dengan pola standar, dilewati.`);
         continue;
