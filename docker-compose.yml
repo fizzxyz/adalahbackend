@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  imutflix-backend:
+    build: .
+    container_name: imutflix-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    # Optionally mount the directory if we want to run in dev mode or use local files,
+    # but for production compose, simple env injection is best.
