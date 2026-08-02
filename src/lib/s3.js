@@ -6,7 +6,7 @@ const { S3 } = require('../config/env');
 
 const s3Client = new S3Client({
   endpoint: S3.ENDPOINT,
-  region: 'id-jkt-1', // Correct region from Dahono S3
+  region: 'auto', // Correct region for Cloudflare R2
   credentials: {
     accessKeyId: S3.ACCESS_KEY_ID,
     secretAccessKey: S3.SECRET_ACCESS_KEY,
