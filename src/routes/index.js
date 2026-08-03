@@ -22,10 +22,11 @@ const LATEST_APP_UPDATE = {
 
 router.get('/update-check', (req, res) => {
   const host = req.headers.host || `localhost:${process.env.PORT || 3000}`;
+  const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
   res.json({
     versionCode: LATEST_APP_UPDATE.versionCode,
     versionName: LATEST_APP_UPDATE.versionName,
-    apkUrl: `http://${host}${LATEST_APP_UPDATE.apkPath}`,
+    apkUrl: `${protocol}://${host}${LATEST_APP_UPDATE.apkPath}`,
     changelog: LATEST_APP_UPDATE.changelog,
     forceUpdate: LATEST_APP_UPDATE.forceUpdate
   });
