@@ -83,9 +83,12 @@ const migrateQuery = `
     s3_key VARCHAR(512) NOT NULL,
     s3_url TEXT NOT NULL,
     filename VARCHAR(255) NOT NULL,
+    storage_provider VARCHAR(50) DEFAULT 'r2',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(media_item_id, season, episode)
   );
+
+  ALTER TABLE video_files ADD COLUMN IF NOT EXISTS storage_provider VARCHAR(50) DEFAULT 'r2';
 `;
 
 async function runMigration() {

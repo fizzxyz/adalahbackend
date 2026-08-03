@@ -118,7 +118,7 @@ exports.play = async (req, res, next) => {
     const videoFile = fileRes.rows[0];
 
     // 3. Generate presigned S3 url
-    const streamUrl = await s3.getPresignedStreamUrl(videoFile.s3_key);
+    const streamUrl = await s3.getPresignedStreamUrl(videoFile.s3_key, videoFile.storage_provider || 'r2');
     if (!streamUrl) {
       return res.status(500).json({ error: 'Failed to generate stream link from S3' });
     }

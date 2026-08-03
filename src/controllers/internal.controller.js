@@ -14,7 +14,8 @@ exports.registerMedia = async (req, res, next) => {
     const {
       tmdbId, mediaType, title, slug,
       season = null, episode = null,
-      s3Key, s3Url, filename
+      s3Key, s3Url, filename,
+      storageProvider = 'r2'
     } = req.body;
 
     if (!tmdbId || !mediaType || !title || !slug || !s3Key || !s3Url || !filename) {
@@ -59,15 +60,15 @@ exports.registerMedia = async (req, res, next) => {
     if (checkRes.rows.length > 0) {
       // Update existing record
       await db.query(
-        `UPDATE video_files SET s3_key = $1, s3_url = $2, filename = $3, created_at = CURRENT_TIMESTAMP WHERE id = $4`,
-        [s3Key, s3Url, filename, checkRes.rows[0].id]
+        `UPDATE video_files SET s3_key = $1, s3_url = $2, filename = $3, storage_provider = $4, created_at = CURRENT_TIMESTAMP WHERE id = $5`,
+        [s3Key, s3Url, filename, storageProvider.toLowerCase(), checkRes.rows[0].id]
       );
     } else {
       // Insert new record
       await db.query(
-        `INSERT INTO video_files (media_item_id, season, episode, s3_key, s3_url, filename)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [mediaItemId, parsedSeason, parsedEpisode, s3Key, s3Url, filename]
+        `INSERT INTO video_files (media_item_id, season, episode, s3_key, s3_url, filename, storage_provider)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [mediaItemId, parsedSeason, parsedEpisode, s3Key, s3Url, filename, storageProvider.toLowerCase()]
       );
     }
 
