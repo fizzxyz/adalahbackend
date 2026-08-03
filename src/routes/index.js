@@ -13,10 +13,10 @@ router.use('/', userRoutes);
 
 // 2. App Update Check endpoint for Android client
 const LATEST_APP_UPDATE = {
-  versionCode: 3,
-  versionName: "1.0.3",
+  versionCode: 4,
+  versionName: "1.0.4",
   apkPath: "/uploads/imutflix.apk",
-  changelog: "Fix pemutar media",
+  changelog: "More faster n reliable stream with cdn",
   forceUpdate: true
 };
 
