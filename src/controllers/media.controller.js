@@ -3,6 +3,7 @@
 const db = require('../lib/db');
 const tmdb = require('../lib/tmdb');
 const s3 = require('../lib/s3');
+const { getGDriveClient } = require('../lib/gdrive');
 
 // Helper to generate standardized slug from title (matching android's buildSlugCandidates)
 function generateSlug(title) {
@@ -117,7 +118,21 @@ exports.play = async (req, res, next) => {
 
     const videoFile = fileRes.rows[0];
 
-    // 3. Generate presigned S3 url
+    // 3. Generate stream URL based on storage provider
+    if (videoFile.storage_provider === 'gdrive') {
+      const host = req.headers.host || 'localhost:3001';
+      const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+      const streamUrl = `${protocol}://${host}/play/drive/${videoFile.s3_key}`;
+
+      return res.json({
+        m3u8: streamUrl,
+        embedUrl: null,
+        pageUrl: null,
+        subtitleUrl: null
+      });
+    }
+
+    // Fallback S3
     const streamUrl = await s3.getPresignedStreamUrl(videoFile.s3_key, videoFile.storage_provider || 'r2');
     if (!streamUrl) {
       return res.status(500).json({ error: 'Failed to generate stream link from S3' });
@@ -226,6 +241,76 @@ exports.getAvailableEpisodes = async (req, res, next) => {
   } catch (err) {
     console.error('[Available Episodes Error]:', err.message);
     res.json({ isAvailable: false, type: 'tvshows', seasons: [], sources: ['s3'], error: err.message });
+  }
+};
+
+exports.streamFromDrive = async (req, res, next) => {
+  const { fileId } = req.params;
+  const range = req.headers.range;
+
+  try {
+    const oAuth2Client = await getGDriveClient();
+    if (!oAuth2Client) {
+      return res.status(503).json({ error: 'Google Drive authentication files are missing on server.' });
+    }
+
+    // 1. Get file metadata (size, mimeType)
+    const metadataUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=size,mimeType`;
+    const metadataRes = await oAuth2Client.request({
+      url: metadataUrl,
+      method: 'GET'
+    });
+
+    const fileSize = parseInt(metadataRes.data.size, 10);
+    const mimeType = metadataRes.data.mimeType || 'video/mp4';
+
+    // 2. Prepare range request piping
+    const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    let driveRequestHeaders = {};
+
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunksize = (end - start) + 1;
+
+      res.writeHead(206, {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
+        'Content-Type': mimeType,
+      });
+
+      driveRequestHeaders['Range'] = `bytes=${start}-${end}`;
+    } else {
+      res.writeHead(200, {
+        'Content-Length': fileSize,
+        'Content-Type': mimeType,
+      });
+    }
+
+    // 3. Pipe Google API stream response
+    const response = await oAuth2Client.request({
+      url: driveUrl,
+      method: 'GET',
+      headers: driveRequestHeaders,
+      responseType: 'stream'
+    });
+
+    response.data.pipe(res);
+
+    // Stop pipeline if client aborts the request (seeking or closing the player)
+    req.on('close', () => {
+      if (response.data && typeof response.data.destroy === 'function') {
+        response.data.destroy();
+      }
+    });
+
+  } catch (err) {
+    console.error(`[GDrive Stream Error] Failed streaming file "${fileId}":`, err.message);
+    if (!res.headersSent) {
+      res.status(500).json({ error: `Gagal memutar stream Google Drive: ${err.message}` });
+    }
   }
 };
 

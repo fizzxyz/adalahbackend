@@ -13,3 +13,4 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./uploads:/app/uploads
+      - ./gdrive:/app/gdrive

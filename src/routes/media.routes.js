@@ -12,6 +12,7 @@ router.get('/search', mediaController.search);
 // Play
 router.get('/play', mediaController.play);
 router.get('/play/lk21', mediaController.playLk21);
+router.get('/play/drive/:fileId', mediaController.streamFromDrive);
 
 // Episode Available
 router.get('/episodes/available', mediaController.getAvailableEpisodes);

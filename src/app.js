@@ -15,10 +15,10 @@ function createApp() {
   app.use(helmet());
   app.use(express.json());
 
-  // ── Root endpoints (directly mapped to match Retrofit BASE_API_URL endpoints) ──
   app.get('/search', mediaController.search);
   app.get('/play', mediaController.play);
   app.get('/play/lk21', mediaController.playLk21);
+  app.get('/play/drive/:fileId', mediaController.streamFromDrive);
 
   // ── API routes ──────────────────────────────────────────────────────────
   app.use('/api', apiRoutes);
