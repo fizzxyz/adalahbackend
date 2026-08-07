@@ -9,8 +9,17 @@ services:
       - "3001:3001"
     env_file:
       - .env
+    environment:
+      - REDIS_URL=redis://imutflix-redis:6379
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./uploads:/app/uploads
       - ./gdrive:/app/gdrive
+    depends_on:
+      - imutflix-redis
+
+  imutflix-redis:
+    image: redis:alpine
+    container_name: imutflix-redis
+    restart: unless-stopped
