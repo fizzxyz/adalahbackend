@@ -255,7 +255,7 @@ exports.streamFromDrive = async (req, res, next) => {
     }
 
     // 1. Get file metadata (size, mimeType)
-    const metadataUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=size,mimeType`;
+    const metadataUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=size,mimeType&supportsAllDrives=true`;
     const metadataRes = await oAuth2Client.request({
       url: metadataUrl,
       method: 'GET'
@@ -265,7 +265,7 @@ exports.streamFromDrive = async (req, res, next) => {
     const mimeType = metadataRes.data.mimeType || 'video/mp4';
 
     // 2. Prepare range request piping
-    const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`;
     let driveRequestHeaders = {};
 
     if (range) {

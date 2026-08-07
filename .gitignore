@@ -1,2 +1,4 @@
 .env
 node_modules
+gdrive/token.json
+gdrive/credentials.json
